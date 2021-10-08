@@ -11,15 +11,25 @@ export const addMessageToStore = (state, payload) => {
     return [newConvo, ...state];
   }
 
-  return state.map((convo) => {
+  let activeConversationIndex = null;
+
+  const newState = state.map((convo, index) => {
     if (convo.id === message.conversationId) {
+      activeConversationIndex = index;
       convo.messages.push(message);
       convo.latestMessageText = message.text;
-      return convo;
+      return { ...convo };
     } else {
       return convo;
     }
   });
+
+  if(activeConversationIndex) {
+    const moveForwardCoversation = newState.splice(activeConversationIndex, 1)[0];
+    newState.unshift(moveForwardCoversation);
+  }
+  
+  return newState;
 };
 
 export const addOnlineUserToStore = (state, id) => {
@@ -67,14 +77,23 @@ export const addSearchedUsersToStore = (state, users) => {
 };
 
 export const addNewConvoToStore = (state, recipientId, message) => {
-  return state.map((convo) => {
+  let activeConversationIndex = null;
+  const newState = state.map((convo, index) => {
     if (convo.otherUser.id === recipientId) {
+      activeConversationIndex = index;
       convo.id = message.conversationId;
       convo.messages.push(message);
       convo.latestMessageText = message.text;
-      return convo;
+      return { ...convo };
     } else {
       return convo;
     }
   });
+
+  if(activeConversationIndex) {
+    const moveForwardCoversation = newState.splice(activeConversationIndex, 1)[0];
+    newState.unshift(moveForwardCoversation);
+  }
+
+  return newState;
 };
