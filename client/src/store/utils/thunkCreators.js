@@ -5,8 +5,12 @@ import {
   addConversation,
   setNewMessage,
   setSearchedUsers,
+  setReadMessages,
 } from "../conversations";
-import { gotUser, setFetchingStatus } from "../user";
+import {
+  gotUser,
+  setFetchingStatus
+} from "../user";
 
 axios.interceptors.request.use(async function (config) {
   const token = await localStorage.getItem("messenger-token");
@@ -20,7 +24,9 @@ axios.interceptors.request.use(async function (config) {
 export const fetchUser = () => async (dispatch) => {
   dispatch(setFetchingStatus(true));
   try {
-    const { data } = await axios.get("/auth/user");
+    const {
+      data
+    } = await axios.get("/auth/user");
     dispatch(gotUser(data));
     if (data.id) {
       socket.emit("go-online", data.id);
@@ -34,25 +40,33 @@ export const fetchUser = () => async (dispatch) => {
 
 export const register = (credentials) => async (dispatch) => {
   try {
-    const { data } = await axios.post("/auth/register", credentials);
+    const {
+      data
+    } = await axios.post("/auth/register", credentials);
     await localStorage.setItem("messenger-token", data.token);
     dispatch(gotUser(data));
     socket.emit("go-online", data.id);
   } catch (error) {
     console.error(error);
-    dispatch(gotUser({ error: error.response.data.error || "Server Error" }));
+    dispatch(gotUser({
+      error: error.response.data.error || "Server Error"
+    }));
   }
 };
 
 export const login = (credentials) => async (dispatch) => {
   try {
-    const { data } = await axios.post("/auth/login", credentials);
+    const {
+      data
+    } = await axios.post("/auth/login", credentials);
     await localStorage.setItem("messenger-token", data.token);
     dispatch(gotUser(data));
     socket.emit("go-online", data.id);
   } catch (error) {
     console.error(error);
-    dispatch(gotUser({ error: error.response.data.error || "Server Error" }));
+    dispatch(gotUser({
+      error: error.response.data.error || "Server Error"
+    }));
   }
 };
 
@@ -71,7 +85,9 @@ export const logout = (id) => async (dispatch) => {
 
 export const fetchConversations = () => async (dispatch) => {
   try {
-    const { data } = await axios.get("/api/conversations");
+    const {
+      data
+    } = await axios.get("/api/conversations");
     dispatch(gotConversations(data));
   } catch (error) {
     console.error(error);
@@ -79,7 +95,9 @@ export const fetchConversations = () => async (dispatch) => {
 };
 
 const saveMessage = async (body) => {
-  const { data } = await axios.post("/api/messages", body);
+  const {
+    data
+  } = await axios.post("/api/messages", body);
   return data;
 };
 
@@ -91,19 +109,42 @@ const sendMessage = (data, body) => {
   });
 };
 
+const updateSenderMessagesReadStatus = (conversationId, senderId) => {
+  socket.emit("update-new-messages", {
+    conversationId,
+    senderId,
+  });
+};
+
 // message format to send: {recipientId, text, conversationId}
 // conversationId will be set to null if its a brand new conversation
-export const postMessage =  (body) => async (dispatch) => {
+export const postMessage = (body) => async (dispatch) => {
   try {
     const data = await saveMessage(body);
-    
+
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
     } else {
       dispatch(setNewMessage(data.message));
     }
-
     sendMessage(data, body);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const updateMessagesReadStatus = (conversationId, senderId) => async (dispatch) => {
+  try {
+    await axios.put("/api/messages", {
+      conversationId,
+      senderId,
+    })
+    
+    dispatch(setReadMessages({
+      conversationId,
+      senderId
+    }));
+    updateSenderMessagesReadStatus(conversationId, senderId);
   } catch (error) {
     console.error(error);
   }
@@ -111,7 +152,9 @@ export const postMessage =  (body) => async (dispatch) => {
 
 export const searchUsers = (searchTerm) => async (dispatch) => {
   try {
-    const { data } = await axios.get(`/api/users/${searchTerm}`);
+    const {
+      data
+    } = await axios.get(`/api/users/${searchTerm}`);
     dispatch(setSearchedUsers(data));
   } catch (error) {
     console.error(error);

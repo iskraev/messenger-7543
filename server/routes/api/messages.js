@@ -42,4 +42,33 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+
+router.put("/", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const { conversationId, senderId } = req.body;
+    
+    Message.update({
+      read: true
+    }, {
+      where: {
+        senderId: senderId,
+        read: false
+      },
+      include: [{
+        model: Conversation,
+        where: {
+          id: conversationId,
+        }
+      }]
+    })
+
+    res.sendStatus(200);
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
