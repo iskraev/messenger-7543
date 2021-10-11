@@ -23,6 +23,7 @@ const Sidebar = (props) => {
   const classes = useStyles();
   const conversations = props.conversations || [];
   const { handleChange, searchTerm } = props;
+  
 
   return (
     <Box className={classes.root}>
@@ -32,7 +33,10 @@ const Sidebar = (props) => {
       {conversations
         .filter((conversation) => conversation.otherUser.username.includes(searchTerm))
         .map((conversation) => {
-          return <Chat conversation={conversation} key={conversation.otherUser.username} />;
+          return <Chat 
+            conversation={conversation}
+            key={conversation.otherUser.username}
+          />;
         })}
     </Box>
   );

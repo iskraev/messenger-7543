@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const { Conversation, Message } = require("../../db/models");
 const onlineUsers = require("../../onlineUsers");
+const { Op } = require("sequelize");
+
 
 // expects {recipientId, text, conversationId } in body (conversationId will be null if no conversation exists yet)
 router.post("/", async (req, res, next) => {
@@ -37,6 +39,50 @@ router.post("/", async (req, res, next) => {
       conversationId: conversation.id,
     });
     res.json({ message, sender });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+router.put("/", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+
+    const { conversationId, senderId } = req.body;
+    const conversation = await Conversation.findOne({
+      where: {
+        id: conversationId, 
+        [Op.or]: {
+          user1Id: req.user.id,
+          user2Id: req.user.id,
+        }
+      }
+    })
+
+    // abort if unauthorized user tries to update the messages
+    if(conversation === null) {
+      return res.sendStatus(422);
+    }
+    
+    Message.update({
+      read: true
+    }, {
+      where: {
+        senderId: senderId,
+        read: false
+      },
+      include: [{
+        model: Conversation,
+        where: {
+          id: conversationId,
+        }
+      }]
+    })
+
+    res.sendStatus(200);
   } catch (error) {
     next(error);
   }

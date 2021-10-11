@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { User, Conversation, Message } = require("../../db/models");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const onlineUsers = require("../../onlineUsers");
 
 // get all conversations for a user, include latest message text for preview, and all messages
@@ -18,7 +18,15 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
-      attributes: ["id"],
+      attributes: ["id", [Sequelize.literal(`(
+        SELECT COUNT(DISTINCT messages)
+        FROM messages
+        INNER JOIN conversations ON conversations.id = "messages"."conversationId"
+        WHERE "messages"."senderId" != ${userId}
+        AND "messages"."conversationId" = conversation.id
+        AND messages.read = false
+      )`), 'newMessagesCount']],
+      group: ["conversation.id", "messages.id", "user1.id", "user2.id"],
       order: [[Message, "createdAt", "DESC"]],
       include: [
         { model: Message, order: ["createdAt", "DESC"] },
@@ -50,6 +58,7 @@ router.get("/", async (req, res, next) => {
     for (let i = 0; i < conversations.length; i++) {
       const convo = conversations[i];
       const convoJSON = convo.toJSON();
+      convoJSON.newMessagesCount = parseInt(convoJSON.newMessagesCount);
 
       // set a property "otherUser" so that frontend will have easier access
       if (convoJSON.user1) {
@@ -70,6 +79,19 @@ router.get("/", async (req, res, next) => {
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[0].text;
       convoJSON.messages = convoJSON.messages.reverse();
+
+      convoJSON.lastReadIndex = undefined;
+
+      // find last read index
+      for(let i = convoJSON.messages.length - 1; i >= 0; i--) {
+        if(convoJSON.messages[i].senderId === userId) {
+          if(convoJSON.messages[i].read === true) {
+            convoJSON.lastReadIndex = i;
+            break;
+          };
+        }
+      }
+
       conversations[i] = convoJSON;
     }
 
