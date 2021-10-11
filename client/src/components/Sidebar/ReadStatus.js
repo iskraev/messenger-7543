@@ -2,14 +2,13 @@ import React from "react";
 import { Badge } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
   badge: {
-    background: "#3A8DFF",
-    color: 'white',
-    fontFamily: "Open Sans, sans-serif",
+    background: theme.palette.primary.main,
+    color: theme.palette.white.main,
     fontSize: 10,
-    fontWeight: 'bold',
-    marginRight: 20,
+    fontWeight: theme.typography.fontWeight.bold,
+    marginRight: theme.spacing(10),
   },
 }));
 

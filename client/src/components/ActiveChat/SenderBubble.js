@@ -2,7 +2,7 @@ import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Avatar, Box, Typography } from "@material-ui/core";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
     flexDirection: "column",
@@ -26,10 +26,10 @@ const useStyles = makeStyles(() => ({
     borderRadius: "10px 10px 0 10px"
   },
   avatar: {
-    height: 20,
-    width: 20,
-    marginTop: 10,
-    marginBottom: 10,
+    height: theme.spacing(10),
+    width: theme.spacing(10),
+    marginTop: theme.spacing(5),
+    marginBottom: theme.spacing(5),
   }
 }));
 
@@ -46,8 +46,8 @@ const SenderBubble = (props) => {
         <Avatar
           alt={otherUser.username}
           src={otherUser.photoUrl}
-          className={classes.avatar}>
-        </Avatar>
+          className={classes.avatar}
+        />
       )}
     </Box>
   );

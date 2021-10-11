@@ -138,10 +138,17 @@ export const setReadMessagesToStore = (state, payload) => {
       if(newConvo.otherUser.id === senderId) {
         newConvo.newMessagesCount = 0;
       }
+
+      let setLastReadIndex = false;
+
       for(let i = newConvo.messages.length - 1; i >= 0; i--) {
         if (newConvo.messages[i].senderId === senderId) {
           if(newConvo.messages[i].read === true) break;
           newConvo.messages[i].read = true;
+          if(!setLastReadIndex) {
+            newConvo.lastReadIndex = i;
+            setLastReadIndex = true;
+          }
         }
       }
       return newConvo;
