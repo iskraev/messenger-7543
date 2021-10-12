@@ -2,6 +2,7 @@ const router = require("express").Router();
 const { User, Conversation, Message } = require("../../db/models");
 const { Op, Sequelize } = require("sequelize");
 const onlineUsers = require("../../onlineUsers");
+const GroupChat = require('../../db/models/groupChat');
 
 // get all conversations for a user, include latest message text for preview, and all messages
 // include other user model so we have info on username/profile pic (don't include current user info)
@@ -16,19 +17,21 @@ router.get("/", async (req, res, next) => {
         [Op.or]: {
           user1Id: userId,
           user2Id: userId,
-        },
+          '$groupChat.userId$': userId
+        }, 
       },
-      attributes: ["id", [Sequelize.literal(`(
+      attributes: ["id", "name", [Sequelize.literal(`(
         SELECT COUNT(DISTINCT messages)
         FROM messages
         INNER JOIN conversations ON conversations.id = "messages"."conversationId"
         WHERE "messages"."senderId" != ${userId}
         AND "messages"."conversationId" = conversation.id
         AND messages.read = false
-      )`), 'newMessagesCount']],
-      group: ["conversation.id", "messages.id", "user1.id", "user2.id"],
+      )`), 'newMessagesCount']], 
+      group: ["conversation.id", "messages.id", "user1.id", "user2.id", "groupChat.id"],
       order: [[Message, "createdAt", "DESC"]],
       include: [
+        { model: GroupChat, as: 'groupChat' },
         { model: Message, order: ["createdAt", "DESC"] },
         {
           model: User,
@@ -54,10 +57,17 @@ router.get("/", async (req, res, next) => {
         },
       ],
     });
-
     for (let i = 0; i < conversations.length; i++) {
       const convo = conversations[i];
       const convoJSON = convo.toJSON();
+
+      if(convoJSON.name) {
+        conversations[i] = convoJSON;
+        continue;
+      };
+      
+      if(convoJSON.userId) continue;
+
       convoJSON.newMessagesCount = parseInt(convoJSON.newMessagesCount);
 
       // set a property "otherUser" so that frontend will have easier access
