@@ -1,6 +1,7 @@
 const db = require("./db");
 const { User } = require("./models");
 const Conversation = require("./models/conversation");
+const GroupChat = require("./models/userConversations");
 const Message = require("./models/message");
 
 async function seed() {
@@ -15,12 +16,28 @@ async function seed() {
       "https://res.cloudinary.com/dmlvthmqr/image/upload/v1607914467/messenger/thomas_kwzerk.png",
   });
 
+  await Conversation.create({
+    name: 'New Group Chat',
+  });
+
+
   const santiago = await User.create({
     username: "santiago",
     email: "santiago@email.com",
     password: "123456",
     photoUrl:
       "https://res.cloudinary.com/dmlvthmqr/image/upload/v1607914466/messenger/775db5e79c5294846949f1f55059b53317f51e30_s3back.png",
+  });
+
+  await GroupChat.create({
+    conversationId: 1,
+    userId: 1,
+  });
+
+
+  await GroupChat.create({
+    conversationId: 1,
+    userId: 2,
   });
 
   const santaigoConvo = await Conversation.create({
