@@ -1,7 +1,7 @@
 const Sequelize = require("sequelize");
 const db = require("../db");
 
-const GroupChat = db.define("groupChat", {
+const UserConversations = db.define("userConversations", {
   conversationId: {
     type: Sequelize.INTEGER,
     allowNull: false,
@@ -12,4 +12,4 @@ const GroupChat = db.define("groupChat", {
   },
 });
 
-module.exports = GroupChat;
+module.exports = UserConversations;

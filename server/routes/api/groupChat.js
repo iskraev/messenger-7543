@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { Conversation } = require("../../db/models");
-const GroupChat = require('../../db/models/groupChat');
+const GroupChat = require('../../db/models/userConversations');
 
 router.post("/", async (req, res, next) => {
   try {
